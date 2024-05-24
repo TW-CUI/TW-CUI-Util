@@ -147,7 +147,7 @@ class TWCUI_Util_GenerationParameters(BaseNode):
             seed = new_random_seed()
 
         batch_size = 1
-        LATENT = torch.zeros([batch_size, 4, height // 8, width // 8], device=self.device)
+        LATENT = torch.zeros([batch_size, 4, image_height // 8, image_width // 8], device=self.device)
 
         return (MODEL, CLIP, VAE, LATENT, image_width, image_height, sampling_steps, cfg, sampler_name, scheduler_name,
                 seed)
