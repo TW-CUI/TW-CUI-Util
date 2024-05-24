@@ -124,7 +124,7 @@ class TWCUI_Util_GenerationParameters(BaseNode):
                     "seed")
 
     def process(self, ckpt_name: str, vae_name: str, image_width: int, image_height: int, sampling_steps: int,
-                cfg_scale: float, sampler_name: str, scheduler_name: str, seed: int) -> tuple:
+                cfg: float, sampler_name: str, scheduler_name: str, seed: int) -> tuple:
         MODEL, CLIP, baseVAE = self._load_checkpoint(ckpt_name)
         print(f"{type(MODEL)}, {type(CLIP)}, {type(baseVAE)}")
         if vae_name in ["taesd", "taesdxl"]:
@@ -139,7 +139,7 @@ class TWCUI_Util_GenerationParameters(BaseNode):
             original_seed = seed
             seed = new_random_seed()
 
-        return (MODEL, CLIP, VAE, image_width, image_height, sampling_steps, cfg_scale, sampler_name, scheduler_name,
+        return (MODEL, CLIP, VAE, image_width, image_height, sampling_steps, cfg, sampler_name, scheduler_name,
                 seed)
 
 
