@@ -1,9 +1,12 @@
 from datetime import timezone, datetime
 import random
 
-import comfy.utils
+import torch
+
+import comfy.model_management
 import comfy.sd
 import comfy.samplers
+import comfy.utils
 
 import folder_paths
 from nodes import MAX_RESOLUTION
@@ -63,6 +66,10 @@ class TWCUI_Util_GenerationParameters(BaseNode):
      - seed (INT)
     """
 
+    def __init__(self):
+        super().__init__()
+        self.device = comfy.model_management.intermediate_device()
+
     CATEGORY = MODULE_CATEGORY
 
     @staticmethod
@@ -119,9 +126,9 @@ class TWCUI_Util_GenerationParameters(BaseNode):
             }
         }
 
-    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "INT", "INT", "INT", "FLOAT",
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "LATENT", "INT", "INT", "INT", "FLOAT",
                     comfy.samplers.KSampler.SAMPLERS, comfy.samplers.KSampler.SCHEDULERS, "INT")
-    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "width", "height", "steps", "cfg", "sampler_name", "scheduler",
+    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "LATENT", "width", "height", "steps", "cfg", "sampler_name", "scheduler",
                     "seed")
 
     def process(self, ckpt_name: str, vae_name: str, image_width: int, image_height: int, sampling_steps: int,
@@ -139,7 +146,10 @@ class TWCUI_Util_GenerationParameters(BaseNode):
             original_seed = seed
             seed = new_random_seed()
 
-        return (MODEL, CLIP, VAE, image_width, image_height, sampling_steps, cfg, sampler_name, scheduler_name,
+        batch_size = 1
+        LATENT = torch.zeroes([batch_size, 4, height // 8, width // 8], device=self.device)
+
+        return (MODEL, CLIP, VAE, LATENT, image_width, image_height, sampling_steps, cfg, sampler_name, scheduler_name,
                 seed)
 
 
