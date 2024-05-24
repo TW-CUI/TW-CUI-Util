@@ -105,7 +105,6 @@ class TWCUI_Util_GenerationParameters(BaseNode):
                     "min": 0.00,
                     "max": 20.00,
                     "step": 0.25,
-                    "round": 2,
                     "display": "number"
                 }),
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS,),
