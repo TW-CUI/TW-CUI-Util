@@ -31,7 +31,7 @@ class TWCUI_Util_BaseNode:
     FUNCTION: str = "process"
 
     # Defines if we're an Output Node or not
-    OUTPUT_NODES: bool = False
+    OUTPUT_NODE: bool = False
 
     def process(self, **kwargs) -> tuple:
         raise NotImplementedError
