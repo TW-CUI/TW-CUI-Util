@@ -66,8 +66,9 @@ class TWCUI_Util_GenerationParameters(BaseNode):
     CATEGORY = MODULE_CATEGORY
 
     @staticmethod
-    def _load_checkpoint(ckpt_name, output_vae=True, output_clip=True) -> tuple[object, comfy.sd.CLIP, comfy.sd.VAE]:
-        # Implementation takekn from CheckpointLoaderSimple in ComfyUI nodes.py
+    def _load_checkpoint(ckpt_name, output_vae=True, output_clip=True) -> tuple[comfy.model_patcher.ModelPatcher,
+                                                                                comfy.sd.CLIP, comfy.sd.VAE]:
+        # Implementation taken from CheckpointLoaderSimple in ComfyUI nodes.py
         ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
         out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae, output_clip,
                                                     embedding_directory=folder_paths.get_folder_paths("embeddings"))
@@ -125,8 +126,7 @@ class TWCUI_Util_GenerationParameters(BaseNode):
 
     def process(self, ckpt_name: str, vae_name: str, image_width: int, image_height: int, sampling_steps: int,
                 cfg: float, sampler_name: str, scheduler_name: str, seed: int) -> tuple:
-        MODEL, CLIP, baseVAE = self._load_checkpoint(ckpt_name)
-        print(f"{type(MODEL)}, {type(CLIP)}, {type(baseVAE)}")
+        MODEL, CLIP, VAE0 = self._load_checkpoint(ckpt_name)
         if vae_name in ["taesd", "taesdxl"]:
             sd = load_taesd(vae_name)
         else:
@@ -173,3 +173,43 @@ class TWCUI_Util_CommonSDXLResolutions(BaseNode):
         dims: str = dim.lower().split(' x ')
 
         return int(dims[0]), int(dims[1])
+
+
+class TWCUI_Util_GenerationPrompts(BaseNode):
+    """
+    This is a multi-field TEXT node that allows entering a positive and negative
+    prompt and pass them both out.
+
+    Contains two multiline text input fields, neg_prompt is optional.
+
+    Produces the PROMPT and NEGPROMPT as STRING, also produces POSITIVE and NEGATIVE CONDITIONING.
+    """
+
+    RETURN_TYPES = ("STRING", "STRING", "CONDITIONING", "CONDITIONING")
+    RETURN_NAMES = ("prompt", "neg_prompt", "POSITIVE", "NEGATIVE")
+
+    CATEGORY = MODULE_CATEGORY
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict:
+        return {
+            "required": {
+                "CLIP": ("CLIP",),
+                "prompt": ("STRING", {"multiline": True, "dynamicPrompts": True})
+            },
+            "optional": {
+                "neg_prompt": ("STRING", {"multiline": True, "dynamicPrompts": True})
+            }
+        }
+
+    @staticmethod
+    def _encode(clip, text):
+        tokens = clip.tokenize(text)
+        cond, pooled = clip.encode_from_tokens(tokens, return_pooled=True)
+        return [[cond, {"pooled_output": pooled}]]
+
+    def process(self, CLIP: comfy.sd.CLIP, prompt: str, neg_prompt: str) -> tuple[str, str, object, object]:
+        positive = self._encode(CLIP, prompt)
+        negative = self._encode(CLIP, neg_prompt)
+
+        return prompt, neg_prompt, positive, negative
