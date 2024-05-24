@@ -1,3 +1,6 @@
+from datetime import timezone, datetime
+import random
+
 import comfy.utils
 import comfy.sd
 import comfy.samplers
@@ -9,6 +12,25 @@ from ._base import TWCUI_Util_BaseNode as BaseNode, GLOBAL_CATEGORY
 from ._static import vae_list, load_taesd
 
 MODULE_CATEGORY = f"{GLOBAL_CATEGORY}/generation"
+
+
+# Initialize the random system anew. This is because some extensions may alter
+# this seed generation process and cause problems.
+initial_random_state = random.getstate()
+random.seed(datetime.now().timestamp())
+seed_random_state = random.getstate()
+random.setstate(initial_random_state)
+
+
+def _new_random_seed():
+    """ Gets a new random seed from the seed_random_state and resetting the previous state."""
+    global seed_random_state
+    prev_random_state = random.getstate()
+    random.setstate(seed_random_state)
+    seed = random.randint(1, 18446744073709551615)
+    seed_random_state = random.getstate()
+    random.setstate(prev_random_state)
+    return seed
 
 
 class TWCUI_Util_GenerationParameters(BaseNode):
@@ -25,6 +47,8 @@ class TWCUI_Util_GenerationParameters(BaseNode):
      - CFG scale
      - Sampler
      - Scheduler
+     - Seed
+     - control_after_generate (defines seed behavior)
 
     Outputs:
      - MODEL
@@ -36,6 +60,7 @@ class TWCUI_Util_GenerationParameters(BaseNode):
      - cfg_scale (FLOAT)
      - SAMPLER
      - SCHEDULER
+     - seed (INT)
     """
 
     CATEGORY = MODULE_CATEGORY
@@ -84,16 +109,22 @@ class TWCUI_Util_GenerationParameters(BaseNode):
                     "display": "number"
                 }),
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS,),
-                "scheduler_name": (comfy.samplers.KSampler.SCHEDULERS,)
+                "scheduler_name": (comfy.samplers.KSampler.SCHEDULERS,),
+                "seed": ("INT", {
+                    "default": -1,
+                    "min": -1,
+                    "max": 0xffffffffffffffff,
+                    "step": 1
+                }),
             }
         }
 
     RETURN_TYPES = ("MODEL", "CLIP", "VAE", "INT", "INT", "FLOAT",
-                    comfy.samplers.KSampler.SAMPLERS, comfy.samplers.KSampler.SCHEDULERS)
-    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "width", "height", "cfg_scale", "sampler_name", "scheduler_name")
+                    comfy.samplers.KSampler.SAMPLERS, comfy.samplers.KSampler.SCHEDULERS, "INT")
+    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "width", "height", "cfg_scale", "sampler_name", "scheduler_name", "seed")
 
     def process(self, ckpt_name: str, vae_name: str, image_width: int, image_height: int, sampling_steps: int,
-                cfg_scale: float, sampler_name: str, scheduler_name: str) -> tuple:
+                cfg_scale: float, sampler_name: str, scheduler_name: str, seed: int) -> tuple:
         MODEL, CLIP, baseVAE = self._load_checkpoint(ckpt_name)
         print(f"{type(MODEL)}, {type(CLIP)}, {type(baseVAE)}")
         if vae_name in ["taesd", "taesdxl"]:
@@ -103,7 +134,13 @@ class TWCUI_Util_GenerationParameters(BaseNode):
             sd = comfy.utils.load_torch_file(vae_path)
         VAE = comfy.sd.VAE(sd=sd)
 
-        return MODEL, CLIP, VAE, image_width, image_height, sampling_steps, cfg_scale, sampler_name, scheduler_name
+        if seed == -1:
+            # When seed value is -1, we generate a random value.
+            original_seed = seed
+            seed = new_random_seed()
+
+        return (MODEL, CLIP, VAE, image_width, image_height, sampling_steps, cfg_scale, sampler_name, scheduler_name,
+                seed)
 
 
 class TWCUI_Util_CommonSDXLResolutions(BaseNode):
