@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 
 from ._base import TWCUI_Util_BaseNode as BaseNode, GLOBAL_CATEGORY
 
+from ._static import vae_list
+
 import folder_paths
 # noinspection PyPackageRequirements
 from nodes import MAX_RESOLUTION
@@ -24,7 +26,7 @@ MODULE_CATEGORY = f"{GLOBAL_CATEGORY}/image"
 
 class TWCUI_Util_SaveImage(BaseNode):
     """
-    An Output node that does a quick save of an image without metadata.
+    An Output node that does a basic save of an image with optional basic ComfyUI metadata.
     """
 
     def __init__(self):
@@ -85,8 +87,8 @@ class TWCUI_Util_SaveImage(BaseNode):
                         metadata.add_text(x, json.dumps(extra_pnginfo[x]))
 
             filename_with_batch_num = filename.replace("%batch_num%", str(batch_number))
-            filename_with_time = filename.replace("%time", self._get_timestamp(time_format))
-            file = f"{filename_with_batch_num}_{counter:05}_.png"
+            filename_with_time = filename_with_batch_num.replace("%time", self._get_timestamp(time_format))
+            file = f"{filename_with_time}_{counter:05}_.png"
             img.save(os.path.join(full_output_folder, file), pnginfo=metadata, compress_level=self.compress_level)
             results.append({
                 "filename": file,
@@ -100,3 +102,161 @@ class TWCUI_Util_SaveImage(BaseNode):
                 "images": results
             }
         }
+
+
+class TWCUI_Util_SaveImageAdvanced(BaseNode):
+    """
+    An Output node that does more advanced saving of images, and allows for optional inclusion of metadata.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.output_dir = folder_paths.get_output_directory()
+        self.type = "output"
+        self.prefix_append = ""
+        self.png_compress_level = 4
+
+    RETURN_TYPES = ()
+
+    FUNCTION = "save"
+
+    OUTPUT_NODE = True
+
+    CATEGORY = MODULE_CATEGORY
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict:
+        inputs = {
+            "required": {
+                "images": ("IMAGE", {"forceInput": True}),
+                "filename_prefix": ("STRING", {"default": f'%time_%seed', "multiline": False}),
+                "path": ("STRING", {"default": '', "multiline": False}),
+                "extension": (['png', 'jpeg', 'webp'], {"default": "png"}),
+                "steps": ("INT", {"forceInput": True}),
+                "cfg": ("FLOAT", {"forceInput": True}),
+                "model_name": (folder_paths.get_filename_list("checkpoints"), {"forceInput": True}),
+                "vae_name": (vae_list(), {"forceInput": True})
+                "sampler_name": (comfy.samplers.KSampler.SAMPLERS, {"forceInput": True}),
+                "scheduler": (comfy.samplers.KSampler.SCHEDULERS, {"forceInput": True}),
+            },
+            "optional": {
+                "positive_prompt": ("STRING", {"default": "unknown", "multiline": True, "forceInput": True}),
+                "negative_prompt": ("STRING", {"default": "unknown", "multiline": True, "forceInput": True}),
+                "seed_value": ("INT", {"default": 0, "min": 0, "max": 18446744073709551615, "step": 1}),
+                "width": ("INT", {"default": 1024, "min": 8, "max": MAX_RESOLUTION, "step": 8}),
+                "height": ("INT", {"default": 1024, "min": 8, "max": MAX_RESOLUTION, "step": 8}),
+                "lossless_webp": ("BOOLEAN", {"default": True}),
+                "quality_jpeg_or_webp": ("INT", {"default": 100, "min": 1, "max": 100}),
+                "time_format": ("STRING", {"default": "%Y-%m-%d-%H%M%S", "multiline": False}),
+                "save_metadata": ("BOOLEAN", {"default": True}),
+                "save_workflow_with_metadata": ("BOOLEAN", {"default": False}),
+                "save_extra_pnginfo_with_metadata": ("BOOLEAN", {"default": False}),
+                "model_hash": ("STRING", {"default": "unknown", "forceInput": True}),
+                "vae_hash": ("STRING", {"default": "unknown", "forceInput": True}),
+            },
+            "hidden": {
+                "prompt": "PROMPT",
+                "extra_pnginfo": "EXTRA_PNGINFO"
+            }
+        }
+
+        return inputs
+
+    @staticmethod
+    def _get_timestamp(time_format):
+        now = datetime.now(tz=timezone.utc)
+        try:
+            timestamp = now.strftime(time_format)
+        except:
+            timestamp = now.strftime("%Y-%m-%d-%H%M%SUTC")
+
+        return timestamp
+
+    @staticmethod
+    def _make_pathname(filename: str, seed: int, modelname: str, time_format: str, batch_number: int,
+                       counter: int = None)  -> str:
+        filename = filename.replace("%date", get_timestamp("%Y-%m-%d"))
+        filename = filename.replace("%time", get_timestamp(time_format))
+        filename = filename.replace("%model", modelname)
+        filename = filename.replace("%seed", str(seed))
+        filename = filename.replace("%batch_num%", str(batch_number))
+        if counter:
+            filename = filename.replace("%counter", f"{counter:05}")
+        else:
+            filename = filename.replace("%counter", "")
+        return filename
+
+    def _make_filename(self, filename: str, seed: int, modelname: str, time_format: str, batch_number: int,
+                       counter: int = None) -> str:
+        filename = make_pathname(filename, seed, modelname, time_format, batch_number, counter)
+
+        return self._get_timestamp(time_format) if filename == "" else filename
+
+    def save(self, images, filename_prefix: str, path: str, extension: str, steps: int, cfg: float,
+             model_name: str, vae_name: str, sampler_name: str, scheduler: str, positive_prompt: str,
+             negative_prompt: str, seed_value: int, width: int, height: int, lossless_webp: bool,
+             quality_jpeg_or_webp: str, time_format: str, save_metadata: bool, save_workflow_with_metadata: bool,
+             save_extra_pnginfo_with_metadata: bool, model_hash: str, vae_hash: str,
+             prompt: dict = None, extra_pnginfo: dict = None):
+        if path or path == '':
+            path = os.path.join(self.output_dir, path)
+        else:
+            path = self.output_dir
+
+        if path.strip() != '':
+            if not os.path.exists(output_path.strip()):
+                print(f"The specified path `{output_path.strip()}` does not exist. Creating directory.")
+                os.makedirs(output_path, exist_ok=True)
+
+        subfolder = os.path.normpath(path)
+
+        paths = []
+
+        for (batch_number, image) in enumerate(images):
+            counter = 1
+            i = 255. * image.cpu().numpy()
+            img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
+            metadata = None
+
+            parameters = (f"Prompt: {positive_prompt}. \nNegative prompt: {negative_prompt}. \nSteps: {steps}, "
+                          f"Sampler: {sampler_name}, Scheduler: {scheduler}, CFG scale: {cfg}, Seed: {seed}, "
+                          f"Size: {width}x{height}, Model hash: {model_hash}, Model: {model_name}, "
+                          f"VAE hash: {vae_hash}, VAE: {vae_name}, Version: ComfyUI")
+
+            filename_prefix = self._make_filename(filename_prefix, seed_value, model_name, time_format, batch_number,
+                                                  counter)
+
+            if extension == "png":
+                metadata = PngInfo()
+                if save_metadata:
+                    metadata.add_text("parameters", parameters)
+                    if prompt is not None and save_workflow_with_metadata:
+                        metadata.add_text("prompt", json.dumps(prompt))
+                    if extra_pnginfo is not None and save_extra_pnginfo_with_metadata:
+                        for x in extra_pnginfo:
+                            if x.lower() == 'workflow' and not save_workflow_in_metadata:
+                                continue
+                            metadata.add_text(x, json.dumps(extra_pnginfo[x]))
+
+                filename = f"{filename_prefix}.png"
+                file = os.path.join(self.output_dir, path, filename)
+                img.save(file, pnginfo=metadata, compress_level=self.compress_level)
+            else:
+                filename = f"{filename_prefix}.{extension}"
+                file = os.path.join(self.output_dir, path, filename)
+                img.save(file, compress_level=self.compress_level, quality_jpeg_or_webp=quality_jpeg_or_webp,
+                         lossless=lossless_webp,)
+                if save_metadata:
+                    exif_bytes = piexif.dump({
+                        "Exif": {
+                            piexif.ExifIFD.UserComment: piexif.helper.UserComment.dump(parameters, encoding="unicode")
+                        },
+                    })
+                    piexif.insert(exif_bytes, file)
+
+            paths.append(filename)
+            counter += 1
+
+        return {"ui": {"images": map(
+            lambda fname: {"filename": fname, "subfolder": subfolder if subfolder != '.' else '',
+                           "type": 'output'}, paths)}}

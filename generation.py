@@ -126,18 +126,31 @@ class TWCUI_Util_GenerationParameters(BaseNode):
             }
         }
 
-    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "LATENT", "INT", "INT", "INT", "FLOAT",
+    RETURN_TYPES = ("MODEL", "STRING", "CLIP", "VAE", "STRING", "LATENT", "INT", "INT", "INT", "FLOAT",
                     comfy.samplers.KSampler.SAMPLERS, comfy.samplers.KSampler.SCHEDULERS, "INT")
-    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "LATENT", "width", "height", "steps", "cfg", "sampler_name", "scheduler",
-                    "seed")
+    RETURN_NAMES = ("MODEL", "model_hash", "CLIP", "VAE", "vae_hash", "LATENT", "width", "height", "steps", "cfg",
+                    "sampler_name", "scheduler", "seed")
 
     def process(self, ckpt_name: str, vae_name: str, image_width: int, image_height: int, sampling_steps: int,
                 cfg: float, sampler_name: str, scheduler_name: str, seed: int) -> tuple:
         MODEL, CLIP, VAE0 = self._load_checkpoint(ckpt_name)
+        model_sha256_hash = hashlib.sha256()
+        with open(folder_paths.get_full_path("checkpoints", ckpt_name), "rb") as f:
+            # Read the file in chunks to avoid loading the entire file into memory
+            for byte_block in iter(lambda: f.read(4096), b""):
+                model_sha256_hash.update(byte_block)
+        model_hash = model_sha256_hash.hexdigest()[:10]
+
         if vae_name in ["taesd", "taesdxl"]:
             sd = load_taesd(vae_name)
+            vae_hash = "unknown (taesd or taesdxl VAE)"
         else:
             vae_path = folder_paths.get_full_path("vae", vae_name)
+            vae_sha256_hash = hashlib.sha256()
+            with open(vae_path, "rb") as f:
+                for byte_block in iter(lambda: f.read(4096), b""):
+                    vae_sha256_hash.update(byte_block)
+            vae_hash = vae_sha256_hash.hexdigest()[:10]
             sd = comfy.utils.load_torch_file(vae_path)
         VAE = comfy.sd.VAE(sd=sd)
 
@@ -150,8 +163,8 @@ class TWCUI_Util_GenerationParameters(BaseNode):
         latent = torch.zeros([batch_size, 4, image_height // 8, image_width // 8], device=self.device)
         LATENT = {"samples": latent}
 
-        return (MODEL, CLIP, VAE, LATENT, image_width, image_height, sampling_steps, cfg, sampler_name, scheduler_name,
-                seed)
+        return (MODEL, model_hash, CLIP, VAE, vae_hash, LATENT, image_width, image_height, sampling_steps, cfg,
+                sampler_name, scheduler_name, seed)
 
 
 class TWCUI_Util_CommonSDXLResolutions(BaseNode):
