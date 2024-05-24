@@ -100,10 +100,10 @@ class TWCUI_Util_GenerationParameters(BaseNode):
                     "step": 1,
                     "display": "number"
                 }),
-                "cfg_scale": ("FLOAT", {
+                "cfg": ("FLOAT", {
                     "default": 8.00,
                     "min": 0.00,
-                    "max": 10.00,
+                    "max": 20.00,
                     "step": 0.25,
                     "round": 2,
                     "display": "number"
@@ -121,7 +121,7 @@ class TWCUI_Util_GenerationParameters(BaseNode):
 
     RETURN_TYPES = ("MODEL", "CLIP", "VAE", "INT", "INT", "INT", "FLOAT",
                     comfy.samplers.KSampler.SAMPLERS, comfy.samplers.KSampler.SCHEDULERS, "INT")
-    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "width", "height", "steps", "cfg_scale", "sampler_name", "scheduler",
+    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "width", "height", "steps", "cfg", "sampler_name", "scheduler",
                     "seed")
 
     def process(self, ckpt_name: str, vae_name: str, image_width: int, image_height: int, sampling_steps: int,
