@@ -1,7 +1,14 @@
+from .generation import TWCUI_Util_GenerationParameters, TWCUI_Util_CommonSDXLResolutions
+
 from .util import TWCUI_Util_StringLiteral, TWCUI_Util_MultilineStringLiteral
 from .util import TWCUI_Util_IntLiteral, TWCUI_Util_FloatLiteral
 
 NODE_CLASS_MAPPINGS = {
+    # Generation category
+    "TWCUI_Util_CommonSDXLResolutions": TWCUI_Util_CommonSDXLResolutions,
+    "TWCUI_Util_GenerationParameters": TWCUI_Util_GenerationParameters,
+
+    # Util category
     "TWCUI_Util_FloatLiteral": TWCUI_Util_FloatLiteral,
     "TWCUI_Util_IntLiteral": TWCUI_Util_IntLiteral,
     "TWCUI_Util_StringLiteral": TWCUI_Util_StringLiteral,
@@ -9,6 +16,11 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
+    # Generation category
+    "TWCUI_Util_CommonSDXLResolutions": "Common SDXL Resolutions",
+    "TWCUI_Util_GenerationParameters": "Generation Parameters",
+
+    # Util category
     "TWCUI_Util_FloatLiteral": "FLOAT Literal",
     "TWCUI_Util_IntLiteral": "INTEGER Literal",
     "TWCUI_Util_StringLiteral": "STRING Literal",

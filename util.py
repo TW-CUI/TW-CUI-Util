@@ -1,5 +1,7 @@
-from ._base import TWCUI_Util_BaseNode as BaseNode
+from ._base import TWCUI_Util_BaseNode as BaseNode, GLOBAL_CATEGORY
 
+MODULE_CATEGORY = (f"{GLOBAL_CATEGORY}/util"
+                   f"")
 
 class TWCUI_Util_StringLiteral(BaseNode):
     """
@@ -17,6 +19,8 @@ class TWCUI_Util_StringLiteral(BaseNode):
                 "string": ("STRING", {"multiline": False})
             }
         }
+
+    CATEGORY = MODULE_CATEGORY
 
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("STRING",)
@@ -41,6 +45,8 @@ class TWCUI_Util_MultilineStringLiteral(BaseNode):
             }
         }
 
+    CATEGORY = MODULE_CATEGORY
+
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("STRING",)
 
@@ -62,6 +68,8 @@ class TWCUI_Util_IntLiteral(BaseNode):
             }
         }
 
+    CATEGORY = MODULE_CATEGORY
+
     RETURN_TYPES = ("INT",)
     RETURN_NAMES = ("INT",)
 
@@ -82,6 +90,8 @@ class TWCUI_Util_FloatLiteral(BaseNode):
                 "value": ("FLOAT", {"default": 0.0})
             }
         }
+
+    CATEGORY = MODULE_CATEGORY
 
     RETURN_TYPES = ("FLOAT",)
     RETURN_NAMES = ("FLOAT",)

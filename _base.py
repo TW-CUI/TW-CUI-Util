@@ -5,7 +5,7 @@ Primarily contains base class declarations inherited elsewhere.
 Also has some global declarations."""
 
 
-GLOBAL_CATEGORY = "TW-CUI/util"
+GLOBAL_CATEGORY = "TW-CUI"
 
 
 class TWCUI_Util_BaseNode:
