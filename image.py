@@ -139,8 +139,8 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
             "optional": {
                 "positive_prompt": ("STRING", {"default": "unknown", "multiline": True, "forceInput": True}),
                 "negative_prompt": ("STRING", {"default": "unknown", "multiline": True, "forceInput": True}),
-                "seed_value": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "step": 1,
-                                       "forceInput": True}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "step": 1,
+                                 "forceInput": True}),
                 "width": ("INT", {"default": 1024, "min": 8, "max": MAX_RESOLUTION, "step": 8, "forceInput": True}),
                 "height": ("INT", {"default": 1024, "min": 8, "max": MAX_RESOLUTION, "step": 8, "forceInput": True}),
                 "lossless_webp": ("BOOLEAN", {"default": True}),
@@ -193,7 +193,7 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
 
     def save(self, images, filename_prefix: str, path: str, extension: str, steps: int, cfg: float,
              model_name: str, vae_name: str, sampler_name: str, scheduler: str, positive_prompt: str,
-             negative_prompt: str, seed_value: int, width: int, height: int, lossless_webp: bool,
+             negative_prompt: str, seed: int, width: int, height: int, lossless_webp: bool,
              quality_jpeg_or_webp: str, time_format: str, save_metadata: bool, save_workflow_with_metadata: bool,
              save_extra_pnginfo_with_metadata: bool, model_hash: str, vae_hash: str, compression: int,
              prompt: dict = None, extra_pnginfo: dict = None):
