@@ -135,7 +135,7 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
                 "steps": ("INT", {"forceInput": True}),
                 "cfg": ("FLOAT", {"forceInput": True}),
                 "model_name": (folder_paths.get_filename_list("checkpoints"), {"forceInput": True}),
-                "vae_name": (vae_list(), {"forceInput": True})
+                "vae_name": (vae_list(), {"forceInput": True}),
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS, {"forceInput": True}),
                 "scheduler": (comfy.samplers.KSampler.SCHEDULERS, {"forceInput": True}),
             },
