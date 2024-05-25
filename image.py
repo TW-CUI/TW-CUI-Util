@@ -5,15 +5,15 @@ from datetime import datetime, timezone
 
 from ._base import TWCUI_Util_BaseNode as BaseNode, GLOBAL_CATEGORY
 
-from ._static import vae_list
-
+# noinspection PyUnresolvedReferences
 import folder_paths
-# noinspection PyPackageRequirements
+# noinspection PyPackageRequirements, PyUnresolvedReferences
 from nodes import MAX_RESOLUTION
 
-# noinspection PyPackageRequirements
+# noinspection PyPackageRequirements, PyUnresolvedReferences
 import comfy.samplers
 
+# noinspection PyUnresolvedReferences
 from PIL import Image, ExifTags
 from PIL.PngImagePlugin import PngInfo
 import piexif
@@ -61,9 +61,10 @@ class TWCUI_Util_SaveImage(BaseNode):
     @staticmethod
     def _get_timestamp(time_format):
         now = datetime.now(tz=timezone.utc)
+        # noinspection PyBroadException
         try:
             timestamp = now.strftime(time_format)
-        except:
+        except Exception:
             timestamp = now.strftime("%Y-%m-%d-%H%M%SUTC")
 
         return timestamp
@@ -164,18 +165,18 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
     @staticmethod
     def _get_timestamp(time_format):
         now = datetime.now(tz=timezone.utc)
+        # noinspection PyBroadException
         try:
             timestamp = now.strftime(time_format)
-        except:
+        except Exception:
             timestamp = now.strftime("%Y-%m-%d-%H%M%SUTC")
 
         return timestamp
 
-    @staticmethod
-    def _make_pathname(filename: str, seed: int, modelname: str, time_format: str, batch_number: int,
-                       counter: int = None)  -> str:
-        filename = filename.replace("%date", get_timestamp("%Y-%m-%d"))
-        filename = filename.replace("%time", get_timestamp(time_format))
+    def _make_pathname(self, filename: str, seed: int, modelname: str, time_format: str, batch_number: int,
+                       counter: int = None) -> str:
+        filename = filename.replace("%date", self._get_timestamp("%Y-%m-%d"))
+        filename = filename.replace("%time", self._get_timestamp(time_format))
         filename = filename.replace("%model", modelname)
         filename = filename.replace("%seed", str(seed))
         filename = filename.replace("%batch_num%", str(batch_number))
@@ -187,7 +188,7 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
 
     def _make_filename(self, filename: str, seed: int, modelname: str, time_format: str, batch_number: int,
                        counter: int = None) -> str:
-        filename = make_pathname(filename, seed, modelname, time_format, batch_number, counter)
+        filename = self._make_pathname(filename, seed, modelname, time_format, batch_number, counter)
 
         return self._get_timestamp(time_format) if filename == "" else filename
 
@@ -215,7 +216,6 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
             counter = 1
             i = 255. * image.cpu().numpy()
             img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
-            metadata = None
 
             parameters = (f"Prompt: {positive_prompt}. \nNegative prompt: {negative_prompt}. \nSteps: {steps}, "
                           f"Sampler: {sampler_name}, Scheduler: {scheduler}, CFG scale: {cfg}, Seed: {seed}, "
@@ -233,7 +233,7 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
                         metadata.add_text("prompt", json.dumps(prompt))
                     if extra_pnginfo is not None and save_extra_pnginfo_with_metadata:
                         for x in extra_pnginfo:
-                            if x.lower() == 'workflow' and not save_workflow_in_metadata:
+                            if x.lower() == 'workflow' and not save_workflow_with_metadata:
                                 continue
                             metadata.add_text(x, json.dumps(extra_pnginfo[x]))
 
