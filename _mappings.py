@@ -4,7 +4,7 @@ from .generation import TWCUI_Util_GenerationPrompts
 from .image import TWCUI_Util_SaveImage, TWCUI_Util_SaveImageAdvanced
 
 from .util import TWCUI_Util_StringLiteral, TWCUI_Util_MultilineStringLiteral
-from .util import TWCUI_Util_IntLiteral, TWCUI_Util_FloatLiteral, TWCUI_Util_BoolLiteral
+from .util import TWCUI_Util_IntLiteral, TWCUI_Util_FloatLiteral
 
 NODE_CLASS_MAPPINGS = {
     # Generation category
@@ -17,7 +17,6 @@ NODE_CLASS_MAPPINGS = {
     "TWCUI_Util_SaveImageAdvanced": TWCUI_Util_SaveImageAdvanced,
 
     # Util category
-    "TWCUI_Util_BoolLiteral": TWCUI_Util_BoolLiteral,
     "TWCUI_Util_FloatLiteral": TWCUI_Util_FloatLiteral,
     "TWCUI_Util_IntLiteral": TWCUI_Util_IntLiteral,
     "TWCUI_Util_StringLiteral": TWCUI_Util_StringLiteral,
@@ -35,7 +34,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "TWCUI_Util_SaveImageAdvanced": "Save Image (Advanced)",
 
     # Util category
-    "TWCUI_Util_BoolLiteral": "BOOLEAN Literal",
     "TWCUI_Util_FloatLiteral": "FLOAT Literal",
     "TWCUI_Util_IntLiteral": "INTEGER Literal",
     "TWCUI_Util_StringLiteral": "STRING Literal",
