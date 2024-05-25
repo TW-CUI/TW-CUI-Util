@@ -199,8 +199,8 @@ class TWCUI_Util_GenerationParameters(BaseNode):
         with open(os.path.join(folder_paths.base_path, 'vae_hashes.json'), mode="w") as f:
             json.dump(vae_hashes, f)
 
-        return (MODEL, CLIP, VAE, LATENT, ckpt_name, model_hash, vae_name, vae_hash, image_width, image_height,
-                sampling_steps, cfg, sampler_name, scheduler_name, seed)
+        return (MODEL, CLIP, VAE, LATENT, sampler_name, scheduler_name, ckpt_name, model_hash, vae_name, vae_hash,
+                image_width, image_height, sampling_steps, cfg, sampler_name, scheduler_name, seed)
 
 
 class TWCUI_Util_CommonSDXLResolutions(BaseNode):
