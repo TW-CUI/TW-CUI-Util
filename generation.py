@@ -121,8 +121,8 @@ class TWCUI_Util_GenerationParameters(BaseNode):
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS,),
                 "scheduler_name": (comfy.samplers.KSampler.SCHEDULERS,),
                 "seed": ("INT", {
-                    "default": -1,
-                    "min": -1,
+                    "default": 1,
+                    "min": 1,
                     "max": 0xffffffffffffffff,
                     "step": 1
                 }),
@@ -188,11 +188,6 @@ class TWCUI_Util_GenerationParameters(BaseNode):
             vae_hashes[vae_path] = "unknown"
 
         vae_hash = vae_hashes[vae_path]
-
-        if seed == -1:
-            # When seed value is -1, we generate a random value.
-            original_seed = seed
-            seed = new_random_seed()
 
         batch_size = 1
         latent = torch.zeros([batch_size, 4, image_height // 8, image_width // 8], device=self.device)
