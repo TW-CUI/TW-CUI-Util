@@ -1,5 +1,6 @@
 from datetime import timezone, datetime
 import hashlib
+import json
 import random
 
 import torch
@@ -31,7 +32,7 @@ def _new_random_seed():
     global seed_random_state
     prev_random_state = random.getstate()
     random.setstate(seed_random_state)
-    seed = random.randint(1, 18446744073709551615)
+    seed = random.randint(1, 0xffffffffffffffff)
     seed_random_state = random.getstate()
     random.setstate(prev_random_state)
     return seed
@@ -127,33 +128,64 @@ class TWCUI_Util_GenerationParameters(BaseNode):
             }
         }
 
-    RETURN_TYPES = ("MODEL", "STRING", "CLIP", "VAE", "STRING", "LATENT", "INT", "INT", "INT", "FLOAT",
+    #        return (MODEL, CLIP, VAE, LATENT, model_hash, vae_hash, image_width, image_height, sampling_steps, cfg,
+    #            sampler_name, scheduler_name, seed)
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "LATENT", "STRING", "STRING", "INT", "INT", "INT", "FLOAT",
                     comfy.samplers.KSampler.SAMPLERS, comfy.samplers.KSampler.SCHEDULERS, "INT")
-    RETURN_NAMES = ("MODEL", "model_hash", "CLIP", "VAE", "vae_hash", "LATENT", "width", "height", "steps", "cfg",
+    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "LATENT", "model_hash", "vae_hash", "width", "height", "steps", "cfg",
                     "sampler_name", "scheduler", "seed")
 
     def process(self, ckpt_name: str, vae_name: str, image_width: int, image_height: int, sampling_steps: int,
                 cfg: float, sampler_name: str, scheduler_name: str, seed: int) -> tuple:
-        MODEL, CLIP, VAE0 = self._load_checkpoint(ckpt_name)
-        model_sha256_hash = hashlib.sha256()
-        with open(folder_paths.get_full_path("checkpoints", ckpt_name), "rb") as f:
-            # Read the file in chunks to avoid loading the entire file into memory
-            for byte_block in iter(lambda: f.read(4096), b""):
-                model_sha256_hash.update(byte_block)
-        model_hash = model_sha256_hash.hexdigest()[:10]
+        try:
+            with open(os.path.join(folder_paths.base_path, 'model_hashes.json'), 'rb', encoding='utf-8') as f:
+                model_hashes = json.load(f)
+        except FileNotFoundError:
+            model_hashes = {}
+            # format: { "full path": "hashsum" }
 
+        try:
+            with open(os.path.join(folder_paths.base_path, 'vae_hashes.json'), 'rb', encoding='utf-8') as f:
+                vae_hashes = json.load(f)
+        except FileNotFoundError:
+            vae_hashes = {}
+            # format: { "full path": "hashsum" }
+
+        # Load checkpoint and CLIP first.
+        MODEL, CLIP, VAE0 = self._load_checkpoint(ckpt_name)
+
+        # Calculate model path if not present in the known hashes.
+        ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
+        if ckpt_path not in model_hashes.keys():
+            with open(ckpt_path, "rb") as f:
+                model_sha256_hash = hashlib.sha256()
+                # Read the file in chunks to avoid loading the entire file into memory
+                for byte_block in iter(lambda: f.read(4096), b""):
+                    model_sha256_hash.update(byte_block)
+            model_hashes[ckpt_path] = model_sha256_hash.hexdigest()[:10]
+
+        model_hash = model_hashes[ckpt_path]
+
+        # Load VAE first
         if vae_name in ["taesd", "taesdxl"]:
+            vae_path = None
             sd = load_taesd(vae_name)
-            vae_hash = "unknown (taesd or taesdxl VAE)"
         else:
             vae_path = folder_paths.get_full_path("vae", vae_name)
+            sd = comfy.utils.load_torch_file(vae_path)
+        VAE = comfy.sd.VAE(sd=sd)
+
+        # Calculate VAE hash if not present in known hashes
+        if vae_path:
             vae_sha256_hash = hashlib.sha256()
             with open(vae_path, "rb") as f:
                 for byte_block in iter(lambda: f.read(4096), b""):
                     vae_sha256_hash.update(byte_block)
-            vae_hash = vae_sha256_hash.hexdigest()[:10]
-            sd = comfy.utils.load_torch_file(vae_path)
-        VAE = comfy.sd.VAE(sd=sd)
+            vae_hashes[vae_path] = vae_sha256_hash.hexdigest()[:10]
+        else:
+            vae_hashes[vae_path] = "unknown"
+
+        vae_hash = vae_hashes[vae_path]
 
         if seed == -1:
             # When seed value is -1, we generate a random value.
@@ -164,7 +196,13 @@ class TWCUI_Util_GenerationParameters(BaseNode):
         latent = torch.zeros([batch_size, 4, image_height // 8, image_width // 8], device=self.device)
         LATENT = {"samples": latent}
 
-        return (MODEL, model_hash, CLIP, VAE, vae_hash, LATENT, image_width, image_height, sampling_steps, cfg,
+        # Store existing hashes for Models and VAEs.
+        with open(os.path.join(folder_paths.base_path, 'model_hashes.json'), mode="w") as f:
+            json.dump(model_hashes, f)
+        with open(os.path.join(folder_paths.base_path, 'vae_hashes.json'), mode="w") as f:
+            json.dump(vae_hashes, f)
+
+        return (MODEL, CLIP, VAE, LATENT, model_hash, vae_hash, image_width, image_height, sampling_steps, cfg,
                 sampler_name, scheduler_name, seed)
 
 
