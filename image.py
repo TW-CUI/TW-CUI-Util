@@ -140,7 +140,7 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
             "optional": {
                 "positive_prompt": ("STRING", {"default": "unknown", "multiline": True, "forceInput": True}),
                 "negative_prompt": ("STRING", {"default": "unknown", "multiline": True, "forceInput": True}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "step": 1,
+                "seed": ("INT", {"default": -1, "min": -1, "max": 0xffffffffffffffff, "step": 1,
                                  "forceInput": True}),
                 "width": ("INT", {"default": 0, "min": 0, "max": MAX_RESOLUTION, "step": 8, "forceInput": True}),
                 "height": ("INT", {"default": 0, "min": 0, "max": MAX_RESOLUTION, "step": 8, "forceInput": True}),
