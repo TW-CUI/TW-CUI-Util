@@ -129,10 +129,11 @@ class TWCUI_Util_GenerationParameters(BaseNode):
             }
         }
 
-    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "LATENT", "STRING", "STRING", "STRING", "STRING", "INT", "INT", "INT",
-                    "FLOAT", comfy.samplers.KSampler.SAMPLERS, comfy.samplers.KSampler.SCHEDULERS, "INT")
-    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "LATENT", "model_name", "model_hash", "vae_name", "vae_hash", "width",
-                    "height", "steps", "cfg", "sampler_name", "scheduler", "seed")
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "LATENT", comfy.samplers.KSampler.SAMPLERS,
+                    comfy.samplers.KSampler.SCHEDULERS, "STRING", "STRING", "STRING", "STRING", "INT", "INT", "INT",
+                    "FLOAT", "STRING", "STRING", "INT")
+    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "LATENT", "SAMPLER", "SCHEDULER", "model_name", "model_hash", "vae_name",
+                    "vae_hash", "width", "height", "steps", "cfg", "sampler_name", "scheduler", "seed")
 
     def process(self, ckpt_name: str, vae_name: str, image_width: int, image_height: int, sampling_steps: int,
                 cfg: float, sampler_name: str, scheduler_name: str, seed: int) -> tuple:
