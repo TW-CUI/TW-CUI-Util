@@ -222,7 +222,7 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
                           f"Size: {width}x{height}, Model hash: {model_hash}, Model: {model_name}, "
                           f"VAE hash: {vae_hash}, VAE: {vae_name}, Version: ComfyUI")
 
-            filename_prefix = self._make_filename(filename_prefix, seed_value, model_name, time_format, batch_number,
+            filename_prefix = self._make_filename(filename_prefix, seed, model_name, time_format, batch_number,
                                                   counter)
 
             if extension == "png":
