@@ -152,7 +152,7 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
                 "save_extra_pnginfo_with_metadata": ("BOOLEAN", {"default": False}),
                 "model_hash": ("STRING", {"default": "unknown", "forceInput": True}),
                 "vae_hash": ("STRING", {"default": "unknown", "forceInput": True}),
-                "compression": ("INT", {"default": 4, "min": 1, "max": 9, "step": 1}),
+                "compression": ("INT", {"default": 5, "min": 1, "max": 9, "step": 1}),
             },
             "hidden": {
                 "prompt": "PROMPT",
