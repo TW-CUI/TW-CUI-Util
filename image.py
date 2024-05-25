@@ -112,9 +112,6 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
     def __init__(self):
         super().__init__()
         self.output_dir = folder_paths.get_output_directory()
-        self.type = "output"
-        self.prefix_append = ""
-        self.png_compress_level = 4
 
     RETURN_TYPES = ()
 
@@ -153,6 +150,7 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
                 "save_extra_pnginfo_with_metadata": ("BOOLEAN", {"default": False}),
                 "model_hash": ("STRING", {"default": "unknown", "forceInput": True}),
                 "vae_hash": ("STRING", {"default": "unknown", "forceInput": True}),
+                "compression": ("INT", {"default": 4, "min": 1, "max": 9, "step": 1}),
             },
             "hidden": {
                 "prompt": "PROMPT",
@@ -196,7 +194,7 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
              model_name: str, vae_name: str, sampler_name: str, scheduler: str, positive_prompt: str,
              negative_prompt: str, seed_value: int, width: int, height: int, lossless_webp: bool,
              quality_jpeg_or_webp: str, time_format: str, save_metadata: bool, save_workflow_with_metadata: bool,
-             save_extra_pnginfo_with_metadata: bool, model_hash: str, vae_hash: str,
+             save_extra_pnginfo_with_metadata: bool, model_hash: str, vae_hash: str, compression: int,
              prompt: dict = None, extra_pnginfo: dict = None):
         if path or path == '':
             path = os.path.join(self.output_dir, path)
@@ -240,11 +238,11 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
 
                 filename = f"{filename_prefix}.png"
                 file = os.path.join(self.output_dir, path, filename)
-                img.save(file, pnginfo=metadata, compress_level=self.compress_level)
+                img.save(file, pnginfo=metadata, compress_level=compression)
             else:
                 filename = f"{filename_prefix}.{extension}"
                 file = os.path.join(self.output_dir, path, filename)
-                img.save(file, compress_level=self.compress_level, quality_jpeg_or_webp=quality_jpeg_or_webp,
+                img.save(file, compress_level=compression, quality_jpeg_or_webp=quality_jpeg_or_webp,
                          lossless=lossless_webp,)
                 if save_metadata:
                     exif_bytes = piexif.dump({

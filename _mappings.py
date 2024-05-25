@@ -1,7 +1,7 @@
 from .generation import TWCUI_Util_GenerationParameters, TWCUI_Util_CommonSDXLResolutions
 from .generation import TWCUI_Util_GenerationPrompts
 
-from .image import TWCUI_Util_SaveImage
+from .image import TWCUI_Util_SaveImage, TWCUI_Util_SaveImageAdvanced
 
 from .util import TWCUI_Util_StringLiteral, TWCUI_Util_MultilineStringLiteral
 from .util import TWCUI_Util_IntLiteral, TWCUI_Util_FloatLiteral
@@ -14,6 +14,7 @@ NODE_CLASS_MAPPINGS = {
 
     # Image category
     "TWCUI_Util_SaveImage": TWCUI_Util_SaveImage,
+    "TWCUI_Util_SaveImageAdvanced": TWCUI_Util_SaveImageAdvanced,
 
     # Util category
     "TWCUI_Util_FloatLiteral": TWCUI_Util_FloatLiteral,
@@ -30,6 +31,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
 
     # Image category
     "TWCUI_Util_SaveImage": "Save Image",
+    "TWCUI_Util_SaveImageAdvanced": "Save Image (Advanced)",
 
     # Util category
     "TWCUI_Util_FloatLiteral": "FLOAT Literal",
