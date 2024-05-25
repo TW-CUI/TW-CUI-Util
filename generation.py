@@ -1,4 +1,4 @@
-from datetime import timezone, datetime
+from datetime import datetime
 import hashlib
 import os.path
 import json
@@ -127,8 +127,8 @@ class TWCUI_Util_GenerationParameters(BaseNode):
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS,),
                 "scheduler_name": (comfy.samplers.KSampler.SCHEDULERS,),
                 "seed": ("INT", {
-                    "default": 1,
-                    "min": 1,
+                    "default": -1,
+                    "min": -1,
                     "max": 0xffffffffffffffff,
                     "step": 1
                 }),
@@ -240,8 +240,9 @@ class TWCUI_Util_CommonSDXLResolutions(BaseNode):
 
     CATEGORY = MODULE_CATEGORY
 
-    def process(self, **kwargs) -> tuple[int, int]:
+    def process(self, dimensions) -> tuple[int, int]:
         dim, orient = dimensions.split(' (', 1)
+        # noinspection PyUnusedLocal
         orient = orient.strip('()')
         dims: str = dim.lower().split(' x ')
 
