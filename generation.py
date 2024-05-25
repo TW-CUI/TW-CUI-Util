@@ -139,14 +139,14 @@ class TWCUI_Util_GenerationParameters(BaseNode):
     def process(self, ckpt_name: str, vae_name: str, image_width: int, image_height: int, sampling_steps: int,
                 cfg: float, sampler_name: str, scheduler_name: str, seed: int) -> tuple:
         try:
-            with open(os.path.join(folder_paths.base_path, 'model_hashes.json'), 'rb', encoding='utf-8') as f:
+            with open(os.path.join(folder_paths.base_path, 'model_hashes.json'), 'r', encoding='utf-8') as f:
                 model_hashes = json.load(f)
         except FileNotFoundError:
             model_hashes = {}
             # format: { "full path": "hashsum" }
 
         try:
-            with open(os.path.join(folder_paths.base_path, 'vae_hashes.json'), 'rb', encoding='utf-8') as f:
+            with open(os.path.join(folder_paths.base_path, 'vae_hashes.json'), 'r', encoding='utf-8') as f:
                 vae_hashes = json.load(f)
         except FileNotFoundError:
             vae_hashes = {}
@@ -162,6 +162,7 @@ class TWCUI_Util_GenerationParameters(BaseNode):
                 model_sha256_hash = hashlib.sha256()
                 # Read the file in chunks to avoid loading the entire file into memory
                 for byte_block in iter(lambda: f.read(4096), b""):
+                    # noinspection PyTypeChecker
                     model_sha256_hash.update(byte_block)
             model_hashes[ckpt_path] = model_sha256_hash.hexdigest()[:10]
 
@@ -181,6 +182,7 @@ class TWCUI_Util_GenerationParameters(BaseNode):
             vae_sha256_hash = hashlib.sha256()
             with open(vae_path, "rb") as f:
                 for byte_block in iter(lambda: f.read(4096), b""):
+                    # noinspection PyTypeChecker
                     vae_sha256_hash.update(byte_block)
             vae_hashes[vae_path] = vae_sha256_hash.hexdigest()[:10]
         else:
