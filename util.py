@@ -110,7 +110,7 @@ class TWCUI_Util_BoolLiteral(BaseNode):
     def INPUT_TYPES(cls) -> dict:
         return {
             "required": {
-                "value": ("BOOL", {"default": False})
+                "value": ("BOOL", {"default": False, "forceInput": False})
             }
         }
 
