@@ -139,9 +139,10 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
             "optional": {
                 "positive_prompt": ("STRING", {"default": "unknown", "multiline": True, "forceInput": True}),
                 "negative_prompt": ("STRING", {"default": "unknown", "multiline": True, "forceInput": True}),
-                "seed_value": ("INT", {"default": 0, "min": 0, "max": 18446744073709551615, "step": 1}),
-                "width": ("INT", {"default": 1024, "min": 8, "max": MAX_RESOLUTION, "step": 8}),
-                "height": ("INT", {"default": 1024, "min": 8, "max": MAX_RESOLUTION, "step": 8}),
+                "seed_value": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "step": 1,
+                                       "forceInput": True}),
+                "width": ("INT", {"default": 1024, "min": 8, "max": MAX_RESOLUTION, "step": 8, "forceInput": True}),
+                "height": ("INT", {"default": 1024, "min": 8, "max": MAX_RESOLUTION, "step": 8, "forceInput": True}),
                 "lossless_webp": ("BOOLEAN", {"default": True}),
                 "quality_jpeg_or_webp": ("INT", {"default": 100, "min": 1, "max": 100}),
                 "time_format": ("STRING", {"default": "%Y-%m-%d-%H%M%S", "multiline": False}),
