@@ -98,3 +98,26 @@ class TWCUI_Util_FloatLiteral(BaseNode):
 
     def process(self, value) -> tuple:
         return (value,)
+
+
+class TWCUI_Util_BoolLiteral(BaseNode):
+    """
+    Simple Boolean value node that allows you to specify a boolean to pass
+    into other nodes.
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict:
+        return {
+            "required": {
+                "value": ("BOOL", {"default": False})
+            }
+        }
+
+    CATEGORY = MODULE_CATEGORY
+
+    RETURN_TYPES = ("BOOL",)
+    RETURN_NAMES = ("BOOL",)
+
+    def process(self, value: bool) -> tuple:
+        return (value,)
