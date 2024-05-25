@@ -10,6 +10,8 @@ The following "generation" helper nodes are provided:
  - **Generation Parameters** - A node that combines a number of requisite things such as CFG scale, image dimensions, checkpoint selection, VAE
    selection, scheduler selection, and other things necessary for KSampler and others to work into one node. This node ALSO produces requisite MODEL,
    VAE, CLIP, SCHEDULER, and SAMPLER items which can be passed to KSampler or CLIP encoding for prompts.
+
+   Many of these outputs are designed to work with the 'Save Image (Advanced)' node that this repository also provides.
  - **Prompts** - One of the requisites for most SDXL and other image generation is "text to image" which requires prompts to be provided. This node provides
    the capacity to define both positive and negative prompts, produces those as strings, but also produces the POSITIVE and NEGATIVE CONDITIONING items to pass to KSampler.
 
