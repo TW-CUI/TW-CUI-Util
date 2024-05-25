@@ -203,9 +203,9 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
             path = self.output_dir
 
         if path.strip() != '':
-            if not os.path.exists(output_path.strip()):
-                print(f"The specified path `{output_path.strip()}` does not exist. Creating directory.")
-                os.makedirs(output_path, exist_ok=True)
+            if not os.path.exists(path.strip()):
+                print(f"The specified path `{path.strip()}` does not exist. Creating directory.")
+                os.makedirs(path, exist_ok=True)
 
         subfolder = os.path.normpath(path)
 
