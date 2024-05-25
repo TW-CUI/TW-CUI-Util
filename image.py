@@ -34,7 +34,7 @@ class TWCUI_Util_SaveImage(BaseNode):
         self.output_dir = folder_paths.get_output_directory()
         self.type = "output"
         self.prefix_append = ""
-        self.compress_level = 4
+        self.compress_level = 5
 
     RETURN_TYPES = ()
 
