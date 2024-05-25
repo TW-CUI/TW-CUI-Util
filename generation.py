@@ -6,12 +6,18 @@ import random
 
 import torch
 
+# noinspection PyUnresolvedReferences,PyPackageRequirements
 import comfy.model_management
+# noinspection PyUnresolvedReferences,PyPackageRequirements
 import comfy.sd
+# noinspection PyUnresolvedReferences,PyPackageRequirements
 import comfy.samplers
+# noinspection PyUnresolvedReferences,PyPackageRequirements
 import comfy.utils
 
+# noinspection PyUnresolvedReferences,PyPackageRequirements
 import folder_paths
+# noinspection PyUnresolvedReferences,PyPackageRequirements
 from nodes import MAX_RESOLUTION
 
 from ._base import TWCUI_Util_BaseNode as BaseNode, GLOBAL_CATEGORY
@@ -139,15 +145,19 @@ class TWCUI_Util_GenerationParameters(BaseNode):
                 cfg: float, sampler_name: str, scheduler_name: str, seed: int) -> tuple:
         try:
             with open(os.path.join(folder_paths.base_path, 'model_hashes.json'), 'r', encoding='utf-8') as f:
+                print("TWCUI: model_hashes.json is present. Loading hashes from file.")
                 model_hashes = json.load(f)
         except FileNotFoundError:
+            print("TWCUI: model_hashes.json is not present. Not loading hashes, preparing new hash data.")
             model_hashes = {}
             # format: { "full path": "hashsum" }
 
         try:
             with open(os.path.join(folder_paths.base_path, 'vae_hashes.json'), 'r', encoding='utf-8') as f:
+                print("TWCUI: vae_hashes.json is present. Loading hashes from file.")
                 vae_hashes = json.load(f)
         except FileNotFoundError:
+            print("TWCUI: vae_hashes.json is not present. Not loading hashes, preparing new hash data.")
             vae_hashes = {}
             # format: { "full path": "hashsum" }
 
@@ -157,6 +167,8 @@ class TWCUI_Util_GenerationParameters(BaseNode):
         # Calculate model path if not present in the known hashes.
         ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
         if ckpt_path not in model_hashes.keys():
+            print("TWCUI: Checkpoint not in known hash set, calculating checkpoint/model hash. "
+                  "This may take a few moments.")
             with open(ckpt_path, "rb") as f:
                 model_sha256_hash = hashlib.sha256()
                 # Read the file in chunks to avoid loading the entire file into memory
@@ -178,6 +190,7 @@ class TWCUI_Util_GenerationParameters(BaseNode):
 
         # Calculate VAE hash if not present in known hashes
         if vae_path:
+            print("TWCUI: VAE not in known hash set, calculating VAE hash. This may take a few moments.")
             vae_sha256_hash = hashlib.sha256()
             with open(vae_path, "rb") as f:
                 for byte_block in iter(lambda: f.read(4096), b""):
