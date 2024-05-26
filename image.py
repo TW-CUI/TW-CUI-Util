@@ -132,8 +132,6 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
                 "extension": (['png', 'jpeg', 'webp'], {"default": "png"}),
                 "steps": ("INT", {"forceInput": True}),
                 "cfg": ("FLOAT", {"forceInput": True}),
-                "model_name": ("STRING", {"forceInput": True}),
-                "vae_name": ("STRING", {"forceInput": True}),
                 "sampler_name": ("STRING", {"forceInput": True}),
                 "scheduler": ("STRING", {"forceInput": True}),
             },
@@ -150,7 +148,9 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
                 "save_metadata": ("BOOLEAN", {"default": True}),
                 "save_workflow_with_metadata": ("BOOLEAN", {"default": False}),
                 "save_extra_pnginfo_with_metadata": ("BOOLEAN", {"default": False}),
+                "model_name": ("STRING", {"default": "unknown", "forceInput": True}),
                 "model_hash": ("STRING", {"default": "unknown", "forceInput": True}),
+                "vae_name": ("STRING", {"default": "unknokwn", "forceInput": True}),
                 "vae_hash": ("STRING", {"default": "unknown", "forceInput": True}),
                 "compression": ("INT", {"default": 5, "min": 1, "max": 9, "step": 1}),
             },
@@ -193,10 +193,10 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
         return self._get_timestamp(time_format) if filename == "" else filename
 
     def save(self, images, filename_prefix: str, path: str, extension: str, steps: int, cfg: float,
-             model_name: str, vae_name: str, sampler_name: str, scheduler: str, positive_prompt: str,
-             negative_prompt: str, seed: int, width: int, height: int, lossless_webp: bool,
-             quality_jpeg_or_webp: str, time_format: str, save_metadata: bool, save_workflow_with_metadata: bool,
-             save_extra_pnginfo_with_metadata: bool, model_hash: str, vae_hash: str, compression: int,
+             sampler_name: str, scheduler: str, positive_prompt: str, negative_prompt: str, seed: int, width: int,
+             height: int, lossless_webp: bool, quality_jpeg_or_webp: str, time_format: str, save_metadata: bool,
+             save_workflow_with_metadata: bool, save_extra_pnginfo_with_metadata: bool,
+             model_name: str, model_hash: str, vae_hash: str, vae_name: str, compression: int,
              prompt: dict = None, extra_pnginfo: dict = None):
         if path or path == '':
             path = os.path.join(self.output_dir, path)

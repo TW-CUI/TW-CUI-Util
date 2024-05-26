@@ -123,7 +123,7 @@ class TWCUI_Util_GenerationParameters(BaseNode):
     RETURN_NAMES = ("LATENT", "SAMPLER", "SCHEDULER", "width", "height", "steps", "cfg", "sampler_name",
                     "scheduler", "seed")
 
-    def process(self, ckpt_name: str, vae_name: str, image_width: int, image_height: int, sampling_steps: int,
+    def process(self, image_width: int, image_height: int, sampling_steps: int,
                 cfg: float, sampler_name: str, scheduler_name: str, seed: int) -> tuple:
         batch_size = 1
         latent = torch.zeros([batch_size, 4, image_height // 8, image_width // 8], device=self.device)
