@@ -1,5 +1,5 @@
 from .generation import TWCUI_Util_GenerationParameters, TWCUI_Util_CommonSDXLResolutions
-from .generation import TWCUI_Util_GenerationPrompts
+from .generation import TWCUI_Util_GenerationPrompts, TWCUI_Util_ModelVAELoader
 
 from .image import TWCUI_Util_SaveImage, TWCUI_Util_SaveImageAdvanced
 
@@ -8,6 +8,7 @@ from .util import TWCUI_Util_IntLiteral, TWCUI_Util_FloatLiteral
 
 NODE_CLASS_MAPPINGS = {
     # Generation category
+    "TWCUI_Util_ModelVAELoader": TWCUI_Util_ModelVAELoader,
     "TWCUI_Util_CommonSDXLResolutions": TWCUI_Util_CommonSDXLResolutions,
     "TWCUI_Util_GenerationParameters": TWCUI_Util_GenerationParameters,
     "TWCUI_Util_GenerationPrompts": TWCUI_Util_GenerationPrompts,
@@ -25,6 +26,7 @@ NODE_CLASS_MAPPINGS = {
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     # Generation category
+    "TWCUI_Util_ModelVAELoader": "Checkpoint / VAE Loader",
     "TWCUI_Util_CommonSDXLResolutions": "Common SDXL Resolutions",
     "TWCUI_Util_GenerationParameters": "Generation Parameters",
     "TWCUI_Util_GenerationPrompts": "Prompts",
