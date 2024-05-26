@@ -303,6 +303,31 @@ class TWCUI_Util_ModelVAELoader(BaseNode):
             vaes.append("taesdxl")
         return vaes
 
+    def _get_checkpoint_hash(self, ckpt_name) -> str:
+        ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
+        if ckpt_path not in self.model_hashes.keys():
+            print("TWCUI: Checkpoint not in known hash set, calculating checkpoint/model hash. "
+                  "This may take a few moments.")
+            self.model_hashes[ckpt_path] = self._calculate_sha256(ckpt_path)
+        else:
+            print("TWCUI: Checkpoint in known hashes.")
+
+        return self.model_hashes[ckpt_path]
+
+    def _get_vae_hash(self, vae_name) -> str:
+        if vae_name is None or vae_name in ["taesd", "taesdxl"]:
+            print("TWCUI: Current implementation cannot calculate hashes for TAESD or TAESDXL.")
+            return "unknown"
+        else:
+            vae_path = folder_paths.get_full_path("vae", vae_name)
+            if vae_path not in self.vae_hashes:
+                print("TWCUI: VAE not in known hash set, calculating VAE hash. This may take a few moments.")
+                self.vae_hashes[vae_path] = self._calculate_sha256(vae_path)
+            else:
+                print("TWCUI: VAE in known hashes.")
+
+            return self.vae_hashes[vae_path]
+
     @classmethod
     def INPUT_TYPES(cls) -> dict:
         return {
@@ -320,6 +345,8 @@ class TWCUI_Util_ModelVAELoader(BaseNode):
     def process(self, ckpt_name: str, vae_name: str) -> tuple:
         # Load hashes from files for checkpoint/models and VAEs.
         self._load_hashes()
+
+        # Define variable types here.
         MODEL: comfy.model_patcher.ModelPatcher
         CLIP: comfy.sd.CLIP
         VAE: comfy.sd.VAE
@@ -338,25 +365,9 @@ class TWCUI_Util_ModelVAELoader(BaseNode):
 
         # Hashes!
         # First, check MODEL hash.
-        ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
-        if ckpt_path not in self.model_hashes.keys():
-            print("TWCUI: Checkpoint not in known hash set, calculating checkpoint/model hash. "
-                  "This may take a few moments.")
-            self.model_hashes[ckpt_path] = self._calculate_sha256(ckpt_path)
-        else:
-            print("TWCUI: Checkpoint in known hashes.")
-
-        model_hash = self.model_hashes[ckpt_path]
+        model_hash = self._get_checkpoint_hash(ckpt_name)
 
         # Now, look at VAE.
-        if vae_path:
-            if vae_path not in self.vae_hashes:
-                print("TWCUI: VAE not in known hash set, calculating VAE hash. This may take a few moments.")
-                self.vae_hashes[vae_path] = self._calculate_sha256(vae_path)
-            else:
-                print("TWCUI: VAE in known hashes.")
-            vae_hash = self.vae_hashes[vae_path]
-        else:
-            vae_hash = "unknown"
+        vae_hash = self._get_vae_hash(vae_name)
 
         return MODEL, CLIP, VAE, ckpt_name, model_hash, vae_name, vae_hash
