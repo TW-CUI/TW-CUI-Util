@@ -189,7 +189,7 @@ class TWCUI_Util_GenerationParameters(BaseNode):
         VAE = comfy.sd.VAE(sd=sd)
 
         # Calculate VAE hash if not present in known hashes
-        if vae_path:
+        if vae_path and vae_path not in vae_hashes:
             print("TWCUI: VAE not in known hash set, calculating VAE hash. This may take a few moments.")
             vae_sha256_hash = hashlib.sha256()
             with open(vae_path, "rb") as f:
