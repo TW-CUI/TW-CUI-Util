@@ -246,7 +246,7 @@ class TWCUI_Util_ModelVAELoader(BaseNode):
         return sha256_hash.hexdigest()[:10]
 
     @staticmethod
-    def _load_checkpoint(ckpt_name, output_vae=True,
+    def _load_checkpoint(ckpt_name, output_vae=False,
                          output_clip=True) -> tuple[comfy.model_patcher.ModelPatcher, comfy.sd.CLIP, comfy.sd.VAE]:
         # Implementation taken from CheckpointLoaderSimple in ComfyUI nodes.py
         ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
@@ -322,6 +322,7 @@ class TWCUI_Util_ModelVAELoader(BaseNode):
 
         # load MODEL and CLIP
         MODEL, CLIP, nullVAE = self._load_checkpoint(ckpt_name)
+        print(f"{type(MODEL)}, {type(CLIP)}, {type(nullVAE)}")
 
         # Discard nullVAE - we don't use it.
         del nullVAE
