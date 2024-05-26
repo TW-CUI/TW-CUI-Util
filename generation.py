@@ -252,6 +252,7 @@ class TWCUI_Util_ModelVAELoader(BaseNode):
         ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
         out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae, output_clip,
                                                     embedding_directory=folder_paths.get_folder_paths("embeddings"))
+        print(out)
         return out[:3]
 
     @staticmethod
@@ -319,13 +320,12 @@ class TWCUI_Util_ModelVAELoader(BaseNode):
     def process(self, ckpt_name: str, vae_name: str) -> tuple:
         # Load hashes from files for checkpoint/models and VAEs.
         self._load_hashes()
+        MODEL: comfy.model_patcher.ModelPatcher
+        CLIP: comfy.sd.CLIP
+        VAE: comfy.sd.VAE
 
         # load MODEL and CLIP
-        MODEL, CLIP, nullVAE = self._load_checkpoint(ckpt_name)
-        print(f"{type(MODEL)}, {type(CLIP)}, {type(nullVAE)}")
-
-        # Discard nullVAE - we don't use it.
-        del nullVAE
+        MODEL, CLIP, _ = self._load_checkpoint(ckpt_name)
 
         # Load VAE
         if vae_name in ["taesd", "taesdxl"]:
