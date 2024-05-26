@@ -21,7 +21,6 @@ import folder_paths
 from nodes import MAX_RESOLUTION
 
 from ._base import TWCUI_Util_BaseNode as BaseNode, GLOBAL_CATEGORY
-from ._static import vae_list, load_taesd
 
 MODULE_CATEGORY = f"{GLOBAL_CATEGORY}/generation"
 
@@ -51,8 +50,6 @@ class TWCUI_Util_GenerationParameters(BaseNode):
     for passing into other nodes.
 
     Primarily, it is used to specify the:
-     - Checkpoint/Model
-     - VAE
      - Image width
      - Image height
      - Sampling steps
@@ -63,9 +60,6 @@ class TWCUI_Util_GenerationParameters(BaseNode):
      - control_after_generate (defines seed behavior)
 
     Outputs:
-     - MODEL
-     - VAE
-     - CLIP
      - width (INT)
      - height (INT)
      - steps (INT)
@@ -81,21 +75,10 @@ class TWCUI_Util_GenerationParameters(BaseNode):
 
     CATEGORY = MODULE_CATEGORY
 
-    @staticmethod
-    def _load_checkpoint(ckpt_name, output_vae=True, output_clip=True) -> tuple[comfy.model_patcher.ModelPatcher,
-                                                                                comfy.sd.CLIP, comfy.sd.VAE]:
-        # Implementation taken from CheckpointLoaderSimple in ComfyUI nodes.py
-        ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
-        out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae, output_clip,
-                                                    embedding_directory=folder_paths.get_folder_paths("embeddings"))
-        return out[:3]
-
     @classmethod
     def INPUT_TYPES(cls) -> dict:
         return {
             "required": {
-                "ckpt_name": (folder_paths.get_filename_list("checkpoints"),),
-                "vae_name": (vae_list(),),
                 "image_width": ("INT", {
                     "default": 1024,
                     "min": 8,
@@ -135,85 +118,19 @@ class TWCUI_Util_GenerationParameters(BaseNode):
             }
         }
 
-    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "LATENT", comfy.samplers.KSampler.SAMPLERS,
-                    comfy.samplers.KSampler.SCHEDULERS, "STRING", "STRING", "STRING", "STRING", "INT", "INT", "INT",
-                    "FLOAT", "STRING", "STRING", "INT")
-    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "LATENT", "SAMPLER", "SCHEDULER", "model_name", "model_hash", "vae_name",
-                    "vae_hash", "width", "height", "steps", "cfg", "sampler_name", "scheduler", "seed")
+    RETURN_TYPES = ("LATENT", comfy.samplers.KSampler.SAMPLERS, comfy.samplers.KSampler.SCHEDULERS, "INT",
+                    "INT", "INT", "FLOAT", "STRING", "STRING", "INT")
+    RETURN_NAMES = ("LATENT", "SAMPLER", "SCHEDULER", "width", "height", "steps", "cfg", "sampler_name",
+                    "scheduler", "seed")
 
     def process(self, ckpt_name: str, vae_name: str, image_width: int, image_height: int, sampling_steps: int,
                 cfg: float, sampler_name: str, scheduler_name: str, seed: int) -> tuple:
-        try:
-            with open(os.path.join(folder_paths.base_path, 'model_hashes.json'), 'r', encoding='utf-8') as f:
-                print("TWCUI: model_hashes.json is present. Loading hashes from file.")
-                model_hashes = json.load(f)
-        except FileNotFoundError:
-            print("TWCUI: model_hashes.json is not present. Not loading hashes, preparing new hash data.")
-            model_hashes = {}
-            # format: { "full path": "hashsum" }
-
-        try:
-            with open(os.path.join(folder_paths.base_path, 'vae_hashes.json'), 'r', encoding='utf-8') as f:
-                print("TWCUI: vae_hashes.json is present. Loading hashes from file.")
-                vae_hashes = json.load(f)
-        except FileNotFoundError:
-            print("TWCUI: vae_hashes.json is not present. Not loading hashes, preparing new hash data.")
-            vae_hashes = {}
-            # format: { "full path": "hashsum" }
-
-        # Load checkpoint and CLIP first.
-        MODEL, CLIP, VAE0 = self._load_checkpoint(ckpt_name)
-
-        # Calculate model path if not present in the known hashes.
-        ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
-        if ckpt_path not in model_hashes.keys():
-            print("TWCUI: Checkpoint not in known hash set, calculating checkpoint/model hash. "
-                  "This may take a few moments.")
-            with open(ckpt_path, "rb") as f:
-                model_sha256_hash = hashlib.sha256()
-                # Read the file in chunks to avoid loading the entire file into memory
-                for byte_block in iter(lambda: f.read(4096), b""):
-                    # noinspection PyTypeChecker
-                    model_sha256_hash.update(byte_block)
-            model_hashes[ckpt_path] = model_sha256_hash.hexdigest()[:10]
-
-        model_hash = model_hashes[ckpt_path]
-
-        # Load VAE first
-        if vae_name in ["taesd", "taesdxl"]:
-            vae_path = None
-            sd = load_taesd(vae_name)
-        else:
-            vae_path = folder_paths.get_full_path("vae", vae_name)
-            sd = comfy.utils.load_torch_file(vae_path)
-        VAE = comfy.sd.VAE(sd=sd)
-
-        # Calculate VAE hash if not present in known hashes
-        if vae_path and vae_path not in vae_hashes:
-            print("TWCUI: VAE not in known hash set, calculating VAE hash. This may take a few moments.")
-            vae_sha256_hash = hashlib.sha256()
-            with open(vae_path, "rb") as f:
-                for byte_block in iter(lambda: f.read(4096), b""):
-                    # noinspection PyTypeChecker
-                    vae_sha256_hash.update(byte_block)
-            vae_hashes[vae_path] = vae_sha256_hash.hexdigest()[:10]
-        else:
-            vae_hashes[vae_path] = "unknown"
-
-        vae_hash = vae_hashes[vae_path]
-
         batch_size = 1
         latent = torch.zeros([batch_size, 4, image_height // 8, image_width // 8], device=self.device)
         LATENT = {"samples": latent}
 
-        # Store existing hashes for Models and VAEs.
-        with open(os.path.join(folder_paths.base_path, 'model_hashes.json'), mode="w") as f:
-            json.dump(model_hashes, f)
-        with open(os.path.join(folder_paths.base_path, 'vae_hashes.json'), mode="w") as f:
-            json.dump(vae_hashes, f)
-
-        return (MODEL, CLIP, VAE, LATENT, sampler_name, scheduler_name, ckpt_name, model_hash, vae_name, vae_hash,
-                image_width, image_height, sampling_steps, cfg, sampler_name, scheduler_name, seed)
+        return (LATENT, sampler_name, scheduler_name, image_width, image_height, sampling_steps, cfg,
+                sampler_name, scheduler_name, seed)
 
 
 class TWCUI_Util_CommonSDXLResolutions(BaseNode):
@@ -287,3 +204,158 @@ class TWCUI_Util_GenerationPrompts(BaseNode):
         negative = self._encode(CLIP, neg_prompt)
 
         return prompt, neg_prompt, positive, negative
+
+
+class TWCUI_Util_ModelVAELoader(BaseNode):
+    def __init__(self):
+        super().__init__()
+        self.model_hashes: dict = {}
+        self.vae_hashes: dict = {}
+
+    def _load_hashes(self):
+        try:
+            with open(os.path.join(folder_paths.base_path, 'model_hashes.json'), 'r', encoding='utf-8') as f:
+                print("TWCUI: model_hashes.json is present. Loading hashes from file.")
+                self.model_hashes = json.load(f)
+        except FileNotFoundError:
+            print("TWCUI: model_hashes.json is not present. Not loading hashes, preparing new hash data.")
+            # format: { "full path": "hashsum" }
+
+        try:
+            with open(os.path.join(folder_paths.base_path, 'vae_hashes.json'), 'r', encoding='utf-8') as f:
+                print("TWCUI: vae_hashes.json is present. Loading hashes from file.")
+                self.vae_hashes = json.load(f)
+        except FileNotFoundError:
+            print("TWCUI: vae_hashes.json is not present. Not loading hashes, preparing new hash data.")
+            # format: { "full path": "hashsum" }
+
+    @staticmethod
+    def _calculate_sha256(file_path):
+        """
+        Calculates SHA256 sums of specified file paths.
+        :param file_path: Path-like object, specifies a file path for opening.
+        :return: 10-character string, the last 10 characters of the SHA256 hash.
+        """
+        sha256_hash = hashlib.sha256()
+        with open(file_path, "rb") as f:
+            # Read the file in chunks to avoid loading the entire file into memory
+            for byte_block in iter(lambda: f.read(4096), b""):
+                # noinspection PyTypeChecker
+                sha256_hash.update(byte_block)
+
+        return sha256_hash.hexdigest()[:10]
+
+    @staticmethod
+    def _load_checkpoint(ckpt_name, output_vae=True,
+                         output_clip=True) -> tuple[comfy.model_patcher.ModelPatcher, comfy.sd.CLIP, comfy.sd.VAE]:
+        # Implementation taken from CheckpointLoaderSimple in ComfyUI nodes.py
+        ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
+        out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae, output_clip,
+                                                    embedding_directory=folder_paths.get_folder_paths("embeddings"))
+        return out[:3]
+
+    @staticmethod
+    def _load_taesd(name) -> dict:
+        # Borrowed verbatim from comfyui's implementations
+        sd = {}
+        approx_vaes = folder_paths.get_filename_list("vae_approx")
+
+        encoder = next(filter(lambda a: a.startswith("{}_encoder.".format(name)), approx_vaes))
+        decoder = next(filter(lambda a: a.startswith("{}_decoder.".format(name)), approx_vaes))
+
+        enc = comfy.utils.load_torch_file(folder_paths.get_full_path("vae_approx", encoder))
+        for k in enc:
+            sd["taesd_encoder.{}".format(k)] = enc[k]
+
+        dec = comfy.utils.load_torch_file(folder_paths.get_full_path("vae_approx", decoder))
+        for k in dec:
+            sd["taesd_decoder.{}".format(k)] = dec[k]
+
+        if name == "taesd":
+            sd["vae_scale"] = torch.tensor(0.18215)
+        elif name == "taesdxl":
+            sd["vae_scale"] = torch.tensor(0.13025)
+        return sd
+
+    @staticmethod
+    def _vae_list() -> list:
+        # Borrowed verbatim from comfyui's implementations.
+        vaes = folder_paths.get_filename_list("vae")
+        approx_vaes = folder_paths.get_filename_list("vae_approx")
+        sdxl_taesd_enc = False
+        sdxl_taesd_dec = False
+        sd1_taesd_enc = False
+        sd1_taesd_dec = False
+
+        for v in approx_vaes:
+            if v.startswith("taesd_decoder."):
+                sd1_taesd_dec = True
+            elif v.startswith("taesd_encoder."):
+                sd1_taesd_enc = True
+            elif v.startswith("taesdxl_decoder."):
+                sdxl_taesd_dec = True
+            elif v.startswith("taesdxl_encoder."):
+                sdxl_taesd_enc = True
+        if sd1_taesd_dec and sd1_taesd_enc:
+            vaes.append("taesd")
+        if sdxl_taesd_dec and sdxl_taesd_enc:
+            vaes.append("taesdxl")
+        return vaes
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict:
+        return {
+            "required": {
+                "ckpt_name": (folder_paths.get_filename_list("checkpoints"),),
+                "vae_name": (cls._vae_list(),),
+            }
+        }
+
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "STRING", "STRING", "STRING", "STRING")
+    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "model_name", "model_hash", "vae_name", "vae_hash")
+
+    CATEGORY = MODULE_CATEGORY
+
+    def process(self, ckpt_name: str, vae_name: str) -> tuple:
+        # Load hashes from files for checkpoint/models and VAEs.
+        self._load_hashes()
+
+        # load MODEL and CLIP
+        MODEL, CLIP, nullVAE = self._load_checkpoint(ckpt_name)
+
+        # Discard nullVAE - we don't use it.
+        del nullVAE
+
+        # Load VAE
+        if vae_name in ["taesd", "taesdxl"]:
+            vae_path = None
+            sd = self._load_taesd(vae_name)
+        else:
+            vae_path = folder_paths.get_full_path("vae", vae_name)
+            sd = comfy.utils.load_torch_file(vae_path)
+        VAE = comfy.sd.VAE(sd=sd)
+
+        # Hashes!
+        # First, check MODEL hash.
+        ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
+        if ckpt_path not in self.model_hashes.keys():
+            print("TWCUI: Checkpoint not in known hash set, calculating checkpoint/model hash. "
+                  "This may take a few moments.")
+            self.model_hashes[ckpt_path] = self._calculate_sha256(ckpt_path)
+        else:
+            print("TWCUI: Checkpoint in known hashes.")
+
+        model_hash = self.model_hashes[ckpt_path]
+
+        # Now, look at VAE.
+        if vae_path:
+            if vae_path not in self.vae_hashes:
+                print("TWCUI: VAE not in known hash set, calculating VAE hash. This may take a few moments.")
+                self.vae_hashes[vae_path] = self._calculate_sha256(vae_path)
+            else:
+                print("TWCUI: VAE in known hashes.")
+            vae_hash = self.vae_hashes[vae_path]
+        else:
+            vae_hash = "unknown"
+
+        return MODEL, CLIP, VAE, ckpt_name, model_hash, vae_name, vae_hash
