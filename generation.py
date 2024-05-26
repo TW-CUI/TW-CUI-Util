@@ -358,7 +358,6 @@ class TWCUI_Util_ModelVAELoader(BaseNode):
 
         # Load VAE
         if vae_name in ["taesd", "taesdxl"]:
-            vae_path = None
             sd = self._load_taesd(vae_name)
         else:
             vae_path = folder_paths.get_full_path("vae", vae_name)
