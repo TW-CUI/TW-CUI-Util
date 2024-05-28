@@ -407,7 +407,7 @@ class TWCUI_Util_ModelVAELORALoader(TWCUI_Util_ModelVAELoader):
             # format: { "full path": "hashsum" }
 
     def _get_lora_hash(self, lora_name) -> str:
-        lora_path = folder_paths.get_full_path("loras", ckpt_name)
+        lora_path = folder_paths.get_full_path("loras", lora_name)
         if lora_path not in self.lora_hashes.keys():
             print("TWCUI: Checkpoint not in known hash set, calculating checkpoint/model hash. "
                   "This may take a few moments.")
