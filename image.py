@@ -150,8 +150,11 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
                 "save_extra_pnginfo_with_metadata": ("BOOLEAN", {"default": False}),
                 "model_name": ("STRING", {"default": "unknown", "forceInput": True}),
                 "model_hash": ("STRING", {"default": "unknown", "forceInput": True}),
-                "vae_name": ("STRING", {"default": "unknokwn", "forceInput": True}),
+                "vae_name": ("STRING", {"default": "unknown", "forceInput": True}),
                 "vae_hash": ("STRING", {"default": "unknown", "forceInput": True}),
+                "lora_in_use": ("BOOLEAN", {"default": False}),
+                "lora_name": ("STRING", {"default": "unknown", "forceInput": True}),
+                "lora_hash": ("STRING", {"default": "unknown", "forceInput": True}),
                 "compression": ("INT", {"default": 5, "min": 1, "max": 9, "step": 1}),
             },
             "hidden": {
@@ -196,8 +199,8 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
              sampler_name: str, scheduler: str, positive_prompt: str, negative_prompt: str, seed: int, width: int,
              height: int, lossless_webp: bool, quality_jpeg_or_webp: str, time_format: str, save_metadata: bool,
              save_workflow_with_metadata: bool, save_extra_pnginfo_with_metadata: bool,
-             model_name: str, model_hash: str, vae_hash: str, vae_name: str, compression: int,
-             prompt: dict = None, extra_pnginfo: dict = None):
+             model_name: str, model_hash: str, vae_hash: str, vae_name: str, lora_in_use: bool, lora_name: str,
+             lora_hash: str, compression: int, prompt: dict = None, extra_pnginfo: dict = None):
         if path or path == '':
             path = os.path.join(self.output_dir, path)
         else:
@@ -217,10 +220,19 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
             i = 255. * image.cpu().numpy()
             img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
 
-            parameters = (f"Prompt: {positive_prompt}. \nNegative prompt: {negative_prompt}. \nSteps: {steps}, "
-                          f"Sampler: {sampler_name}, Scheduler: {scheduler}, CFG scale: {cfg}, Seed: {seed}, "
-                          f"Size: {width}x{height}, Model hash: {model_hash}, Model: {model_name}, "
-                          f"VAE hash: {vae_hash}, VAE: {vae_name}, Version: ComfyUI")
+            if lora_in_use:
+                # If we specify that a LoRA is in use, we need to include that in parameters data.
+                parameters = (f"Prompt: {positive_prompt}. \nNegative prompt: {negative_prompt}. \nSteps: {steps}, "
+                              f"Sampler: {sampler_name}, Scheduler: {scheduler}, CFG scale: {cfg}, Seed: {seed}, "
+                              f"Size: {width}x{height}, Model hash: {model_hash}, Model: {model_name}, "
+                              f"VAE hash: {vae_hash}, VAE: {vae_name}, LoRA name: {lora_name}, LoRA hash: {lora_hash}, "
+                              f"Version: ComfyUI")
+            else:
+                # Default is that no LoRA is in use.
+                parameters = (f"Prompt: {positive_prompt}. \nNegative prompt: {negative_prompt}. \nSteps: {steps}, "
+                              f"Sampler: {sampler_name}, Scheduler: {scheduler}, CFG scale: {cfg}, Seed: {seed}, "
+                              f"Size: {width}x{height}, Model hash: {model_hash}, Model: {model_name}, "
+                              f"VAE hash: {vae_hash}, VAE: {vae_name}, Version: ComfyUI")
 
             filename_prefix = self._make_filename(filename_prefix, seed, model_name, time_format, batch_number,
                                                   counter)

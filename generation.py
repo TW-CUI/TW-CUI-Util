@@ -305,6 +305,17 @@ class TWCUI_Util_ModelVAELoader(BaseNode):
             vaes.append("taesdxl")
         return vaes
 
+    def _load_vae(self, vae_name: str) -> comfy.sd.VAE:
+        # Load VAE
+        if vae_name in ["taesd", "taesdxl"]:
+            sd = self._load_taesd(vae_name)
+        else:
+            vae_path = folder_paths.get_full_path("vae", vae_name)
+            sd = comfy.utils.load_torch_file(vae_path)
+        VAE = comfy.sd.VAE(sd=sd)
+
+        return VAE
+
     def _get_checkpoint_hash(self, ckpt_name) -> str:
         ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
         if ckpt_path not in self.model_hashes.keys():
@@ -356,13 +367,7 @@ class TWCUI_Util_ModelVAELoader(BaseNode):
         # load MODEL and CLIP
         MODEL, CLIP = self._load_checkpoint(ckpt_name)
 
-        # Load VAE
-        if vae_name in ["taesd", "taesdxl"]:
-            sd = self._load_taesd(vae_name)
-        else:
-            vae_path = folder_paths.get_full_path("vae", vae_name)
-            sd = comfy.utils.load_torch_file(vae_path)
-        VAE = comfy.sd.VAE(sd=sd)
+        VAE = self._load_vae(vae_name)
 
         # Hashes!
         # First, check MODEL hash.
@@ -372,3 +377,101 @@ class TWCUI_Util_ModelVAELoader(BaseNode):
         vae_hash = self._get_vae_hash(vae_name)
 
         return MODEL, CLIP, VAE, ckpt_name, model_hash, vae_name, vae_hash
+
+
+class TWCUI_Util_ModelVAELORALoader(TWCUI_Util_ModelVAELoader):
+    @classmethod
+    def INPUT_TYPES(cls) -> dict:
+        return {
+            "required": {
+                "ckpt_name": (folder_paths.get_filename_list("checkpoints"),),
+                "vae_name": (cls._vae_list(),),
+                "lora_name": (folder_paths.get_filename_list("loras"), ),
+                "lora_str_model": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
+                "lora_str_clip": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01}),
+            }
+        }
+
+    def __init__(self):
+        super().__init__()
+        self.lora_hashes: dict = {}
+
+    def _load_lora_hashes(self):
+        try:
+            with open(os.path.join(folder_paths.base_path, 'lora_hashes.json'), 'r', encoding='utf-8') as f:
+                print("TWCUI: lora_hashes.json is present. Loading hashes from file.")
+                self.model_hashes = json.load(f)
+        except FileNotFoundError:
+            print("TWCUI: lora_hashes.json is not present. Not loading hashes, preparing new hash data.")
+            # format: { "full path": "hashsum" }
+
+    def _get_lora_hash(self, lora_name) -> str:
+        lora_path = folder_paths.get_full_path("loras", ckpt_name)
+        if lora_path not in self.lora_hashes.keys():
+            print("TWCUI: Checkpoint not in known hash set, calculating checkpoint/model hash. "
+                  "This may take a few moments.")
+            self.lora_hashes[lora_path] = self._calculate_sha256(lora_path)
+        else:
+            print("TWCUI: Checkpoint in known hashes.")
+
+        return self.model_hashes[lora_path]
+
+    def _load_lora(self, model, clip, lora_name, strength_model, strength_clip) -> tuple:
+        if strength_model == 0 and strength_clip == 0:
+            return model, clip
+
+        lora_path = folder_paths.get_full_path("loras", lora_name)
+        lora = None
+        if self.loaded_lora is not None:
+            if self.loaded_lora[0] == lora_path:
+                lora = self.loaded_lora[1]
+            else:
+                temp = self.loaded_lora
+                self.loaded_lora = None
+                del temp
+
+        if lora is None:
+            lora = comfy.utils.load_torch_file(lora_path, safe_load=True)
+            self.loaded_lora = (lora_path, lora)
+
+        model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora, strength_model, strength_clip)
+        return model_lora, clip_lora
+
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "STRING", "STRING", "STRING", "STRING")
+    RETURN_NAMES = ("MODEL", "CLIP", "VAE", "model_name", "model_hash", "vae_name", "vae_hash", "lora_name",
+                    "lora_hash")
+
+    # noinspection PyMethodOverriding
+    def process(self, ckpt_name: str, vae_name: str, lora_name: str, lora_str_model: float,
+                lora_str_clip: float) -> tuple:
+        # Load hashes from files for checkpoint/models and VAEs.
+        self._load_hashes()
+
+        # Load LoRA hashes
+        self._load_lora_hashes()
+
+        # Define variable types here.
+        cMODEL: comfy.model_patcher.ModelPatcher
+        cCLIP: comfy.sd.CLIP
+        lMODEL: comfy.model_patcher.ModelPatcher
+        lCLIP: comfy.sd.CLIP
+        VAE: comfy.sd.VAE
+
+        # load MODEL and CLIP for Checkpoint
+        cMODEL, cCLIP = self._load_checkpoint(ckpt_name)
+        lMODEL, lCLIP = self._load_lora(cMODEL, cCLIP, lora_name, lora_str_model, lora_str_clip)
+
+        # load VAE
+        VAE = self._load_vae(vae_name)
+
+        # Hashes!
+        # First, check MODEL hash.
+        model_hash = self._get_checkpoint_hash(ckpt_name)
+
+        # Now, look at VAE.
+        vae_hash = self._get_vae_hash(vae_name)
+
+        # Now, LoRA hash!
+        lora_hash = self._get_lora_hash(lora_name)
+
+        return lMODEL, lCLIP, VAE, ckpt_name, model_hash, vae_name, vae_hash, lora_name, lora_hash
