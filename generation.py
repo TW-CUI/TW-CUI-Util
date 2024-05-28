@@ -394,6 +394,7 @@ class TWCUI_Util_ModelVAELORALoader(TWCUI_Util_ModelVAELoader):
 
     def __init__(self):
         super().__init__()
+        self.loaded_lora = None
         self.lora_hashes: dict = {}
 
     def _load_lora_hashes(self):
