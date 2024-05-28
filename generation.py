@@ -415,7 +415,7 @@ class TWCUI_Util_ModelVAELORALoader(TWCUI_Util_ModelVAELoader):
         else:
             print("TWCUI: Checkpoint in known hashes.")
 
-        return self.model_hashes[lora_path]
+        return self.lora_hashes[lora_path]
 
     def _load_lora(self, model, clip, lora_name, strength_model, strength_clip) -> tuple:
         if strength_model == 0 and strength_clip == 0:
