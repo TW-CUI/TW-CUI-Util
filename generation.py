@@ -437,7 +437,7 @@ class TWCUI_Util_ModelVAELORALoader(TWCUI_Util_ModelVAELoader):
         model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora, strength_model, strength_clip)
         return model_lora, clip_lora
 
-    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "STRING", "STRING", "STRING", "STRING")
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "STRING", "STRING", "STRING", "STRING", "STRING", "STRING")
     RETURN_NAMES = ("MODEL", "CLIP", "VAE", "model_name", "model_hash", "vae_name", "vae_hash", "lora_name",
                     "lora_hash")
 
