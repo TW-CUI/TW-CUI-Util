@@ -159,4 +159,8 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
+# Part of the Comfy CLI tooling for the ComfyUI Custom Node Repository
 node.tar.gz
+
+# Coverity analysis tools create a cov-int directory, we don't want to include that in git.
+cov-int/
