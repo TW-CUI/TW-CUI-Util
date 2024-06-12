@@ -164,3 +164,9 @@ node.tar.gz
 
 # Coverity analysis tools create a cov-int directory, we don't want to include that in git.
 cov-int/
+TW-CUI-Util.tar
+TW-CUI-Util.tgz
+TW-CUI-Util.lzma
+TW-CUI-Util.xz
+TW-CUI-Util.bz2
+TW-CUI-Util.zip
