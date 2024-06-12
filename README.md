@@ -9,3 +9,8 @@ contributor lists, etc.
 ---
 
 This repository, unless otherwise specified, is licensed under GPL-3.0.
+
+<a href="https://scan.coverity.com/projects/tw-cui-tw-cui-util">
+  <img alt="Coverity Scan Build Status"
+       src="https://scan.coverity.com/projects/30352/badge.svg"/>
+</a>
