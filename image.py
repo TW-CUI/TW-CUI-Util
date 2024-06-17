@@ -199,8 +199,8 @@ class TWCUI_Util_SaveImageAdvanced(BaseNode):
              sampler_name: str, scheduler: str, positive_prompt: str, negative_prompt: str, seed: int, width: int,
              height: int, lossless_webp: bool, quality_jpeg_or_webp: str, time_format: str, save_metadata: bool,
              save_workflow_with_metadata: bool, save_extra_pnginfo_with_metadata: bool,
-             model_name: str, model_hash: str, vae_hash: str, vae_name: str, lora_in_use: bool, lora_name: str,
-             lora_hash: str, compression: int, prompt: dict = None, extra_pnginfo: dict = None):
+             model_name: str, model_hash: str, vae_hash: str, vae_name: str, lora_in_use: bool, compression: int,
+             lora_name: str = None, lora_hash: str = None, prompt: dict = None, extra_pnginfo: dict = None):
         if path or path == '':
             path = os.path.join(self.output_dir, path)
         else:
